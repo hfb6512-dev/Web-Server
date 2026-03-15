@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Key Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --darker: #020617;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            background: var(--darker);
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(6, 182, 212, 0.1) 0%, transparent 40%);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(5%, 5%) rotate(5deg); }
+            66% { transform: translate(-5%, 3%) rotate(-3deg); }
+        }
+
+        /* Floating Orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary);
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 250px;
+            height: 250px;
+            background: var(--secondary);
+            bottom: 20%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: var(--accent);
+            top: 50%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(15, 23, 42, 0.8) !important;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            min-height: calc(100vh - 70px);
+            padding: 1.5rem 0;
+        }
+
+        .sidebar .nav-link {
+            color: var(--text-muted);
+            padding: 12px 24px;
+            margin: 4px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar .nav-link:hover {
+            background: var(--glass);
+            color: var(--text);
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+        }
+
+        .stats-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
+        }
+
+        .stats-card.success {
+            background: linear-gradient(135deg, var(--success), #059669);
+        }
+
+        .stats-card.warning {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+        }
+
+        .stats-card.danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+        }
+
+        .stats-card i {
+            font-size: 2.5rem;
+            opacity: 0.3;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .stats-card .number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .stats-card .label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        /* Key Cards */
+        .key-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .key-card:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .key-card .key-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-light);
+            letter-spacing: 1px;
+        }
+
+        .key-card .key-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .key-type.normal {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .key-type.custom {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--secondary);
+        }
+
+        .key-type.global {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .key-card .key-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .key-status.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .key-status.expired {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .key-status.used {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        /* Modal */
+        .modal-content {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border);
+            padding: 1.5rem;
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        /* Form Controls */
+        .form-control, .form-select {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: var(--glass);
+            border-color: var(--primary);
+            color: var(--text);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-label {
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        /* Key Type Selection */
+        .key-type-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .key-type-option {
+            background: var(--glass);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .key-type-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .key-type-option.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .key-type-option i {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .key-type-option.normal i { color: var(--success); }
+        .key-type-option.custom i { color: var(--secondary); }
+        .key-type-option.global i { color: var(--warning); }
+
+        .key-type-option .title {
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .key-type-option .desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Switch */
+        .form-switch .form-check-input {
+            width: 3em;
+            height: 1.5em;
+            cursor: pointer;
+        }
+
+        .form-switch .form-check-input:checked {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--text), var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--darker);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
+
+        /* Database Status */
+        .db-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .db-status.connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .db-status.disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .db-status .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .db-status.connected .pulse { background: var(--success); }
+        .db-status.disconnected .pulse { background: var(--danger); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Device Card */
+        .device-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .device-card:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: var(--accent);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-buttons button {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .action-buttons button:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-edit {
+            background: rgba(99, 102, 241, 0.2);
+            border: none;
+            color: var(--primary-light);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.2);
+            border: none;
+            color: var(--danger);
+        }
+
+        /* Filter */
+        .filter-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .filter-section select {
+            width: auto;
+            min-width: 150px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                top: 70px;
+                width: 250px;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .stats-card .number {
+                font-size: 2rem;
+            }
+
+            .key-type-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt"></i> SERVER KEY ADMIN
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <div class="db-status" id="dbStatus">
+                    <span class="pulse"></span>
+                    <span>Đang kết nối...</span>
+                </div>
+                <button class="navbar-toggler" type="button" onclick="toggleSidebar()">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-page="keys">
+                                <i class="fas fa-key"></i> Quản lý Keys
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-page="devices">
+                                <i class="fas fa-mobile-alt"></i> Thiết bị
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-page="config">
+                                <i class="fas fa-cog"></i> Cấu hình
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- Keys Page -->
+                <div id="keys-page" class="page active">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                        <h1 class="page-title mb-0">
+                            <i class="fas fa-key"></i> Quản lý Keys
+                        </h1>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-danger" onclick="resetAllData()">
+                                <i class="fas fa-trash-alt"></i> Reset All
+                            </button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createKeyModal">
+                                <i class="fas fa-plus"></i> Tạo Key Mới
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="number" id="total-keys">0</div>
+                                <div class="label">Tổng Keys</div>
+                                <i class="fas fa-key"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card success">
+                                <div class="number" id="active-keys">0</div>
+                                <div class="label">Keys Hoạt động</div>
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card warning">
+                                <div class="number" id="active-devices">0</div>
+                                <div class="label">Thiết bị đang dùng</div>
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Keys List -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <span><i class="fas fa-list"></i> Danh sách Keys</span>
+                            <div class="filter-section">
+                                <select class="form-select form-select-sm" id="filter-type" onchange="loadKeys()">
+                                    <option value="">Tất cả</option>
+                                    <option value="normal">Normal</option>
+                                    <option value="custom">Custom</option>
+                                    <option value="global">Global</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="keys-list">
+                                <div class="empty-state">
+                                    <i class="fas fa-key"></i>
+                                    <h4>Chưa có key nào</h4>
+                                    <p>Hãy tạo key đầu tiên của bạn</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Devices Page -->
+                <div id="devices-page" class="page">
+                    <h1 class="page-title">
+                        <i class="fas fa-mobile-alt"></i> Thiết bị đang dùng
+                    </h1>
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <div id="devices-list">
+                                <div class="empty-state">
+                                    <i class="fas fa-mobile-alt"></i>
+                                    <h4>Chưa có thiết bị nào</h4>
+                                    <p>Các thiết bị sử dụng key sẽ hiển thị ở đây</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Config Page -->
+                <div id="config-page" class="page">
+                    <h1 class="page-title">
+                        <i class="fas fa-cog"></i> Cấu hình hệ thống
+                    </h1>
+
+                    <!-- App Settings -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-cog"></i> Cấu hình ứng dụng
+                        </div>
+                        <div class="card-body">
+                            <form id="config-form">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tiêu đề App</label>
+                                        <input type="text" class="form-control" id="app-title" placeholder="Server Key Admin">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Phụ đề</label>
+                                        <input type="text" class="form-control" id="app-subtitle" placeholder="Quản lý key và thiết bị">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Phiên bản</label>
+                                        <input type="text" class="form-control" id="app-version" placeholder="1.0.0">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Link cập nhật</label>
+                                        <input type="text" class="form-control" id="update-url" placeholder="https://...">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nút Admin</label>
+                                        <input type="text" class="form-control" id="btn-admin" placeholder="Admin">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nút Key</label>
+                                        <input type="text" class="form-control" id="btn-key" placeholder="Key">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nút Login</label>
+                                        <input type="text" class="form-control" id="btn-login" placeholder="Login">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Gợi ý nhập liệu</label>
+                                        <input type="text" class="form-control" id="input-hint" placeholder="Nhập key của bạn...">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Thời hạn key mặc định (giờ)</label>
+                                        <input type="number" class="form-control" id="key-duration" value="24">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-tools"></i> Chế độ bảo trì
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="maintenance-mode">
+                                <label class="form-check-label" for="maintenance-mode">Bật chế độ bảo trì</label>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nội dung thông báo</label>
+                                <textarea class="form-control" id="maintenance-message" rows="3" placeholder="Hệ thống đang bảo trì. Vui lòng thử lại sau!"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Database -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-database"></i> Kết nối Database
+                        </div>
+                        <div class="card-body">
+                            <div class="db-status" id="db-status-detail">
+                                <span class="pulse"></span>
+                                <span>Đang kiểm tra...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveConfig()">
+                        <i class="fas fa-save"></i> Lưu cấu hình
+                    </button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Create Key Modal -->
+    <div class="modal fade" id="createKeyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus-circle"></i> Tạo Key Mới
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Key Type Selection -->
+                    <div class="key-type-selector">
+                        <div class="key-type-option normal selected" onclick="selectKeyType('normal')">
+                            <i class="fas fa-key"></i>
+                            <div class="title">Normal Key</div>
+                            <div class="desc">Dùng 1 lần</div>
+                        </div>
+                        <div class="key-type-option custom" onclick="selectKeyType('custom')">
+                            <i class="fas fa-crown"></i>
+                            <div class="title">Custom Key</div>
+                            <div class="desc">Tái sử dụng</div>
+                        </div>
+                        <div class="key-type-option global" onclick="selectKeyType('global')">
+                            <i class="fas fa-globe"></i>
+                            <div class="title">Global Key</div>
+                            <div class="desc">Nhiều thiết bị</div>
+                        </div>
+                    </div>
+
+                    <!-- Normal Options -->
+                    <div id="normal-options" class="key-options">
+                        <div class="mb-3">
+                            <label class="form-label">Thời hạn (giờ)</label>
+                            <input type="number" class="form-control" id="normal-duration" value="24" min="1">
+                            <small class="text-muted">Key sẽ hết hạn sau số giờ này</small>
+                        </div>
+                    </div>
+
+                    <!-- Custom Options -->
+                    <div id="custom-options" class="key-options" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label">Tên Key</label>
+                            <input type="text" class="form-control" id="custom-name" placeholder="Nhập tên key...">
+                            <small class="text-muted">Key tùy chỉnh có thể tái sử dụng</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Thời hạn (giờ)</label>
+                            <input type="number" class="form-control" id="custom-duration" value="24" min="1">
+                        </div>
+                    </div>
+
+                    <!-- Global Options -->
+                    <div id="global-options" class="key-options" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label">Tên Key</label>
+                            <input type="text" class="form-control" id="global-name" placeholder="Nhập tên key...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Thời hạn (giờ)</label>
+                            <input type="number" class="form-control" id="global-duration" value="24" min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Giới hạn thiết bị</label>
+                            <input type="number" class="form-control" id="global-device-limit" value="1" min="1">
+                            <small class="text-muted">Số thiết bị tối đa có thể sử dụng cùng lúc</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="createKey()">
+                        <i class="fas fa-plus"></i> Tạo Key
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Key Modal -->
+    <div class="modal fade" id="editKeyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit"></i> Sửa Key
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit-key-id">
+                    <div class="mb-3">
+                        <label class="form-label">Key</label>
+                        <input type="text" class="form-control" id="edit-key-value" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Thời hạn (giờ)</label>
+                        <input type="number" class="form-control" id="edit-duration" min="1">
+                    </div>
+                    <div class="mb-3" id="edit-device-limit-container" style="display:none;">
+                        <label class="form-label">Giới hạn thiết bị</label>
+                        <input type="number" class="form-control" id="edit-device-limit" min="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="saveKey()">
+                        <i class="fas fa-save"></i> Lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle"></i> Xác nhận xóa
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Bạn có chắc chắn muốn xóa key này không?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // ==================== FIREBASE CONFIGURATION ====================
+        // THAY THẾ BẰNG THÔNG TIN FIREBASE CỦA BẠN
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxxx", // Thay bằng API Key của bạn từ Firebase Console
+            authDomain: "sever-c08d7.firebaseapp.com",
+            databaseURL: "https://sever-c08d7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "sever-c08d7",
+            storageBucket: "sever-c08d7.appspot.com",
+            messagingSenderId: "xxx",
+            appId: "xxx"
+        };
+
+        // Initialize Firebase
+        let database;
+        let firebaseInitialized = false;
+
+        function initFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                firebaseInitialized = true;
+                updateDbStatus(true);
+                console.log('✅ Firebase initialized successfully');
+            } catch (error) {
+                console.error('❌ Firebase initialization error:', error);
+                updateDbStatus(false);
+            }
+        }
+
+        function updateDbStatus(connected) {
+            const statusEl = document.getElementById('dbStatus');
+            const statusDetailEl = document.getElementById('db-status-detail');
+            
+            if (connected) {
+                statusEl.className = 'db-status connected';
+                statusEl.innerHTML = '<span class="pulse"></span><span>Đã kết nối</span>';
+                
+                if (statusDetailEl) {
+                    statusDetailEl.className = 'db-status connected';
+                    statusDetailEl.innerHTML = '<span class="pulse"></span><span>Firebase đã kết nối</span>';
+                }
+            } else {
+                statusEl.className = 'db-status disconnected';
+                statusEl.innerHTML = '<span class="pulse"></span><span>Chưa kết nối</span>';
+                
+                if (statusDetailEl) {
+                    statusDetailEl.className = 'db-status disconnected';
+                    statusDetailEl.innerHTML = '<span class="pulse"></span><span>Firebase chưa được cấu hình</span>';
+                }
+            }
+        }
+
+        // Initialize on load
+        initFirebase();
+
+        // ==================== APP STATE ====================
+        let currentKeyType = 'normal';
+        let selectedKeyId = null;
+        let keys = [];
+        let devices = [];
+
+        // ==================== NAVIGATION ====================
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                showPage(page);
+            });
+        });
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            
+            document.getElementById(page + '-page').classList.add('active');
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
+            if (page === 'keys') loadKeys();
+            if (page === 'devices') loadDevices();
+            if (page === 'config') loadConfig();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        // ==================== KEY TYPE SELECTION ====================
+        function selectKeyType(type) {
+            currentKeyType = type;
+            document.querySelectorAll('.key-type-option').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.classList.remove('normal', 'custom', 'global');
+            });
+            
+            const selected = document.querySelector(`.key-type-option.${type}`);
+            selected.classList.add('selected');
+            selected.classList.add(type);
+            
+            document.querySelectorAll('.key-options').forEach(opt => opt.style.display = 'none');
+            document.getElementById(type + '-options').style.display = 'block';
+        }
+
+        // ==================== FIREBASE HELPERS ====================
+        function generateKeyId() {
+            return 'key_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function generateRandomKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 12; i++) {
+                if (i > 0 && i % 4 === 0) result += '-';
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return 'gamebooster-' + result;
+        }
+            }
+            return result;
+        }
+
+        // ==================== KEYS MANAGEMENT ====================
+        async function loadKeys() {
+            if (!firebaseInitialized) {
+                showToast('Firebase chưa được cấu hình!', 'danger');
+                return;
+            }
+
+            try {
+                const snapshot = await database.ref('keys').once('value');
+                const keysData = snapshot.val() || {};
+                keys = Object.entries(keysData).map(([id, data]) => ({
+                    id,
+                    ...data
+                }));
+
+                // Apply filter
+                const filterType = document.getElementById('filter-type').value;
+                if (filterType) {
+                    keys = keys.filter(k => k.type === filterType);
+                }
+
+                // Update stats
+                const totalKeys = keys.length;
+                const activeKeys = keys.filter(k => !k.used && (!k.expiresAt || Date.now() < k.expiresAt)).length;
+                const activeDevices = keys.filter(k => k.deviceId || (k.devices && k.devices.length > 0)).length;
+
+                document.getElementById('total-keys').textContent = totalKeys;
+                document.getElementById('active-keys').textContent = activeKeys;
+                document.getElementById('active-devices').textContent = activeDevices;
+
+                // Render keys
+                renderKeys();
+            } catch (error) {
+                console.error('Error loading keys:', error);
+                showToast('Lỗi khi tải keys: ' + error.message, 'danger');
+            }
+        }
+
+        function renderKeys() {
+            if (keys.length === 0) {
+                document.getElementById('keys-list').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-key"></i>
+                        <h4>Chưa có key nào</h4>
+                        <p>Hãy tạo key đầu tiên của bạn</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const keysHtml = keys.map(key => {
+                const isExpired = key.expiresAt && Date.now() > key.expiresAt;
+                const isUsed = key.used;
+                
+                let status = '<span class="key-status active"><i class="fas fa-check"></i> Hoạt động</span>';
+                if (isExpired) status = '<span class="key-status expired"><i class="fas fa-clock"></i> Hết hạn</span>';
+                else if (isUsed) status = '<span class="key-status used"><i class="fas fa-user"></i> Đã dùng</span>';
+                
+                const typeLabels = { normal: 'Normal', custom: 'Custom', global: 'Global' };
+                const typeIcons = { normal: 'fa-key', custom: 'fa-crown', global: 'fa-globe' };
+
+                const expiresDate = key.expiresAt ? new Date(key.expiresAt).toLocaleString('vi-VN') : 'Không giới hạn';
+                
+                // Hiển thị thông tin thiết bị
+                let deviceInfo = '';
+                if (key.type === 'global' && key.devices && key.devices.length > 0) {
+                    deviceInfo = `
+                        <div class="device-info mt-2">
+                            <small class="text-info">
+                                <i class="fas fa-mobile-alt"></i> Thiết bị: ${key.devices.length}/${key.deviceLimit || '∞'}
+                            </small>
+                        </div>
+                    `;
+                } else if (key.deviceId) {
+                    deviceInfo = `
+                        <div class="device-info mt-2">
+                            <small class="text-info">
+                                <i class="fas fa-mobile-alt"></i> Thiết bị: ${key.deviceId}
+                            </small>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="key-card fade-in">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                            <div>
+                                <div class="key-value mb-2">${key.key}</div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="key-type ${key.type}">
+                                        <i class="fas fa-${typeIcons[key.type]}"></i> ${typeLabels[key.type]}
+                                    </span>
+                                    <span class="text-muted"><i class="far fa-clock"></i> ${key.duration}h</span>
+                                    ${status}
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="far fa-calendar-alt"></i> Hết hạn: ${expiresDate}
+                                </small>
+                                ${deviceInfo}
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn-edit" onclick="editKey('${key.id}')" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-delete" onclick="deleteKey('${key.id}')" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('keys-list').innerHTML = keysHtml;
+        }
+
+        async function createKey() {
+            if (!firebaseInitialized) {
+                showToast('Firebase chưa được cấu hình!', 'danger');
+                return;
+            }
+
+            const data = {
+                type: currentKeyType,
+                duration: parseInt(document.getElementById(currentKeyType + '-duration').value) || 24,
+                createdAt: Date.now()
+            };
+
+            if (currentKeyType === 'custom' || currentKeyType === 'global') {
+                data.name = document.getElementById(currentKeyType + '-name').value;
+                if (!data.name) {
+                    showToast('Vui lòng nhập tên key!', 'warning');
+                    return;
+                }
+            }
+
+            if (currentKeyType === 'normal') {
+                data.key = generateRandomKey(); // gamebooster-XXXX-XXXX-XXXX
+                data.used = false;
+                data.deviceId = null;
+                data.usedAt = null;
+            } else if (currentKeyType === 'custom') {
+                data.key = data.name;
+                data.used = false;
+                data.deviceId = null;
+                data.usedAt = null;
+                data.reusable = true;
+            } else if (currentKeyType === 'global') {
+                data.key = data.name;
+                data.deviceLimit = parseInt(document.getElementById('global-device-limit').value) || 1;
+                data.devices = [];
+            }
+
+            data.expiresAt = Date.now() + data.duration * 60 * 60 * 1000;
+
+            try {
+                const keyId = generateKeyId();
+                await database.ref('keys').child(keyId).set(data);
+                
+                bootstrap.Modal.getInstance(document.getElementById('createKeyModal')).hide();
+                loadKeys();
+                showToast(`Tạo key thành công!\n\nKey: ${data.key}`, 'success');
+                
+                // Reset form
+                document.getElementById(currentKeyType + '-name').value = '';
+            } catch (error) {
+                console.error('Error creating key:', error);
+                showToast('Lỗi khi tạo key: ' + error.message, 'danger');
+            }
+        }
+
+        async function editKey(id) {
+            const key = keys.find(k => k.id === id);
+            if (!key) return;
+
+            document.getElementById('edit-key-id').value = id;
+            document.getElementById('edit-key-value').value = key.key;
+            document.getElementById('edit-duration').value = key.duration;
+
+            if (key.type === 'global') {
+                document.getElementById('edit-device-limit-container').style.display = 'block';
+                document.getElementById('edit-device-limit').value = key.deviceLimit || 1;
+            } else {
+                document.getElementById('edit-device-limit-container').style.display = 'none';
+            }
+
+            new bootstrap.Modal(document.getElementById('editKeyModal')).show();
+        }
+
+        async function saveKey() {
+            if (!firebaseInitialized) {
+                showToast('Firebase chưa được cấu hình!', 'danger');
+                return;
+            }
+
+            const id = document.getElementById('edit-key-id').value;
+            const newDuration = parseInt(document.getElementById('edit-duration').value);
+            const updates = {
+                duration: newDuration,
+                expiresAt: Date.now() + newDuration * 60 * 60 * 1000
+            };
+
+            if (document.getElementById('edit-device-limit-container').style.display !== 'none') {
+                updates.deviceLimit = parseInt(document.getElementById('edit-device-limit').value);
+            }
+
+            try {
+                await database.ref('keys').child(id).update(updates);
+                bootstrap.Modal.getInstance(document.getElementById('editKeyModal')).hide();
+                loadKeys();
+                showToast('Cập nhật key thành công!', 'success');
+            } catch (error) {
+                console.error('Error saving key:', error);
+                showToast('Lỗi khi cập nhật key!', 'danger');
+            }
+        }
+
+        function deleteKey(id) {
+            selectedKeyId = id;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        async function confirmDelete() {
+            if (!selectedKeyId || !firebaseInitialized) return;
+
+            try {
+                await database.ref('keys').child(selectedKeyId).remove();
+                bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                loadKeys();
+                showToast('Xóa key thành công!', 'success');
+            } catch (error) {
+                console.error('Error deleting key:', error);
+                showToast('Lỗi khi xóa key!', 'danger');
+            }
+        }
+
+        // ==================== DEVICES MANAGEMENT ====================
+        async function loadDevices() {
+            if (!firebaseInitialized) return;
+
+            try {
+                const snapshot = await database.ref('devices').once('value');
+                const devicesData = snapshot.val() || {};
+                devices = Object.entries(devicesData).map(([id, data]) => ({
+                    id,
+                    ...data
+                }));
+
+                renderDevices();
+            } catch (error) {
+                console.error('Error loading devices:', error);
+            }
+        }
+
+        function renderDevices() {
+            if (devices.length === 0) {
+                document.getElementById('devices-list').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h4>Chưa có thiết bị nào</h4>
+                        <p>Các thiết bị sử dụng key sẽ hiển thị ở đây</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const devicesHtml = devices.map(device => {
+                const expiryDate = device.expiryDate ? new Date(device.expiryDate).toLocaleString('vi-VN') : 'N/A';
+                
+                return `
+                    <div class="device-card fade-in">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                            <div>
+                                <h5 class="mb-2">
+                                    <i class="fas fa-mobile-alt text-info"></i> 
+                                    ${device.deviceId || 'Unknown Device'}
+                                </h5>
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-key"></i> Key: ${device.linkedKey || 'N/A'}
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="far fa-clock"></i> Hết hạn: ${expiryDate}
+                                </small>
+                            </div>
+                            <button class="btn-delete" onclick="removeDevice('${device.id}')" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('devices-list').innerHTML = devicesHtml;
+        }
+
+        async function removeDevice(deviceId) {
+            if (!confirm('Bạn có chắc muốn xóa thiết bị này?')) return;
+            if (!firebaseInitialized) return;
+
+            try {
+                // Find and update the key
+                const keysSnapshot = await database.ref('keys').once('value');
+                const keysData = keysSnapshot.val();
+                
+                for (const [keyId, keyData] of Object.entries(keysData || {})) {
+                    if (keyData.type === 'global' && keyData.devices) {
+                        const newDevices = keyData.devices.filter(d => d !== deviceId);
+                        if (newDevices.length !== keyData.devices.length) {
+                            await database.ref('keys').child(keyId).update({ devices: newDevices });
+                        }
+                    } else if (keyData.deviceId === deviceId) {
+                        await database.ref('keys').child(keyId).update({
+                            deviceId: null,
+                            used: false,
+                            usedAt: null
+                        });
+                    }
+                }
+
+                await database.ref('devices').child(deviceId).remove();
+                loadDevices();
+                loadKeys();
+                showToast('Xóa thiết bị thành công!', 'success');
+            } catch (error) {
+                console.error('Error removing device:', error);
+                showToast('Lỗi khi xóa thiết bị!', 'danger');
+            }
+        }
+
+        // ==================== CONFIG MANAGEMENT ====================
+        let appConfig = {
+            appTitle: 'Server Key Admin',
+            subtitle: 'Quản lý key và thiết bị',
+            appVersion: '1.0.0',
+            updateUrl: '',
+            btnAdmin: 'Admin',
+            btnKey: 'Key',
+            btnLogin: 'Login',
+            inputHint: 'Nhập key của bạn...',
+            keyDuration: 24,
+            maintenance: false,
+            maintenanceMessage: 'Hệ thống đang bảo trì. Vui lòng thử lại sau!'
+        };
+
+        async function loadConfig() {
+            if (!firebaseInitialized) {
+                // Use default config
+                updateConfigForm();
+                return;
+            }
+
+            try {
+                const snapshot = await database.ref('config').once('value');
+                const savedConfig = snapshot.val();
+                if (savedConfig) {
+                    appConfig = { ...appConfig, ...savedConfig };
+                }
+                updateConfigForm();
+            } catch (error) {
+                console.error('Error loading config:', error);
+                updateConfigForm();
+            }
+        }
+
+        function updateConfigForm() {
+            document.getElementById('app-title').value = appConfig.appTitle || '';
+            document.getElementById('app-subtitle').value = appConfig.subtitle || '';
+            document.getElementById('app-version').value = appConfig.appVersion || '';
+            document.getElementById('update-url').value = appConfig.updateUrl || '';
+            document.getElementById('btn-admin').value = appConfig.btnAdmin || '';
+            document.getElementById('btn-key').value = appConfig.btnKey || '';
+            document.getElementById('btn-login').value = appConfig.btnLogin || '';
+            document.getElementById('input-hint').value = appConfig.inputHint || '';
+            document.getElementById('key-duration').value = appConfig.keyDuration || 24;
+            document.getElementById('maintenance-mode').checked = appConfig.maintenance || false;
+            document.getElementById('maintenance-message').value = appConfig.maintenanceMessage || '';
+        }
+
+        async function saveConfig() {
+            if (!firebaseInitialized) {
+                showToast('Firebase chưa được cấu hình!', 'danger');
+                return;
+            }
+
+            const config = {
+                appTitle: document.getElementById('app-title').value,
+                subtitle: document.getElementById('app-subtitle').value,
+                appVersion: document.getElementById('app-version').value,
+                updateUrl: document.getElementById('update-url').value,
+                btnAdmin: document.getElementById('btn-admin').value,
+                btnKey: document.getElementById('btn-key').value,
+                btnLogin: document.getElementById('btn-login').value,
+                inputHint: document.getElementById('input-hint').value,
+                keyDuration: parseInt(document.getElementById('key-duration').value),
+                maintenance: document.getElementById('maintenance-mode').checked,
+                maintenanceMessage: document.getElementById('maintenance-message').value
+            };
+
+            try {
+                await database.ref('config').set(config);
+                appConfig = config;
+                showToast('Lưu cấu hình thành công!', 'success');
+            } catch (error) {
+                console.error('Error saving config:', error);
+                showToast('Lỗi khi lưu cấu hình!', 'danger');
+            }
+        }
+
+        // ==================== RESET DATA ====================
+        async function resetAllData() {
+            if (!confirm('CẢNH BÁO: Điều này sẽ xóa TẤT CẢ keys và thiết bị! Bạn có chắc chắn?')) return;
+            if (!firebaseInitialized) {
+                showToast('Firebase chưa được cấu hình!', 'danger');
+                return;
+            }
+
+            try {
+                await database.ref('keys').remove();
+                await database.ref('devices').remove();
+                loadKeys();
+                loadDevices();
+                showToast('Đã reset tất cả dữ liệu!', 'success');
+            } catch (error) {
+                console.error('Error resetting data:', error);
+                showToast('Lỗi khi reset dữ liệu!', 'danger');
+            }
+        }
+
+        // ==================== TOAST NOTIFICATIONS ====================
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        // ==================== INITIALIZE ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadKeys();
+            
+            // Check Firebase config
+            if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                showToast('Vui lòng cấu hình Firebase trong file index.js!', 'warning');
+            }
+        });
+    </script>
+</body>
+</html>
